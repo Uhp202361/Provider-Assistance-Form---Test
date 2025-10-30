@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Provider Assistance Form</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Minimal inline styles for demo (replace with your style.css) */
+    .container { max-width: 800px; margin: 2rem auto; padding: 1rem; font-family: system-ui, sans-serif; }
+    .header { text-align: center; margin-bottom: 2rem; }
+    .subtitle { color: #666; font-size: 0.9rem; }
+    .section { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; }
+    .section legend { font-weight: bold; padding: 0 0.5rem; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .row > label { display: flex; flex-direction: column; font-size: 0.9rem; }
+    .row > label.small-yesno { grid-column: span 2; }
+    .actions-row { display: flex; justify-content: flex-start; margin-top: 1rem; }
+    .submit-row { text-align: center; margin: 2rem 0; }
+    .card { border: 1px solid #ccc; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; background: #f9f9f9; }
+    .entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; font-weight: 600; }
+    .btn { padding: 0.5rem 1rem; border: 1px solid; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
+    .btn-primary { background: #007bff; color: white; border-color: #007bff; }
+    .btn-primary:disabled { background: #6c757d; cursor: not-allowed; }
+    .btn-outline { background: transparent; color: #007bff; border-color: #007bff; }
+    .btn-link { background: none; border: none; color: #dc3545; font-size: 0.8rem; cursor: pointer; }
+    .form-message { margin-top: 1rem; font-weight: 500; text-align: center; min-height: 1.5rem; }
+    .yesno { display: flex; gap: 1rem; margin-top: 0.5rem; }
+    .yesno label { display: flex; align-items: center; gap: 0.3rem; font-weight: normal; }
+    @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>Provider Assistance Form</h1>
+      <p class="subtitle">Please fill out the form below. Use "Add Dependent" / "Add Physician" to add entries.</p>
+    </header>
+
+    <!-- SINGLE FORM WITH ID -->
+    <form id="providerForm" action="https://api.web3forms.com/submit" method="POST" novalidate>
+      <input type="hidden" name="access_key" value="d4a48e85-94e6-451d-ad62-e9eeea663818">
+
+      <!-- Employee Information -->
+      <fieldset class="section">
+        <legend>Employee Information</legend>
+        <div class="row">
+          <label>
+            First name
+            <input type="text" name="employee_first" required />
+          </label>
+          <label>
+            Last name
+            <input type="text" name="employee_last" required />
+          </label>
+        </div>
+
+        <div class="row">
+          <label>
+            Date of birth
+            <input type="date" name="employee_dob" />
+          </label>
+          <label>
+            Phone
+            <input type="tel" name="employee_phone" />
+          </label>
+        </div>
+
+        <div class="row">
+          <label>
+            Email
+            <input type="email" name="employee_email" />
+          </label>
+          <label>
+            Best contact method
+            <select name="employee_contact_method">
+              <option value="">Select</option>
+              <option>Email</option>
+              <option>Phone</option>
+              <option>Text</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="row">
+          <label>
+            Last 4 digits of SSN
+            <input type="text" name="employee_ssn4" maxlength="4" pattern="\d{4}" title="Please enter exactly 4 digits" />
+          </label>
+        </div>
+      </fieldset>
+
+      <!-- Family Members (Dependents) -->
+      <fieldset class="section" id="dependentsSection">
+        <legend>Family Members</legend>
+        <div id="dependentsContainer"></div>
+        <div class="actions-row">
+          <button type="button" id="addDependentBtn" class="btn btn-outline">Add Dependent</button>
+        </div>
+      </fieldset>
+
+      <!-- Physicians -->
+      <fieldset class="section" id="physiciansSection">
+        <legend>Physician Information</legend>
+        <div id="physiciansContainer"></div>
+        <div class="actions-row">
+          <button type="button" id="addPhysicianBtn" class="btn btn-outline">Add Physician</button>
+        </div>
+      </fieldset>
+
+      <!-- 3rd Party / Submit -->
+      <fieldset class="section small">
+        <label class="checkbox">
+          <input type="checkbox" name="third_party" value="yes" />
+          Check here if you're completing this form for someone other than yourself or your family member.
+        </label>
+      </fieldset>
+
+      <div class="submit-row">
+        <button type="submit" id="submitBtn" class="btn btn-primary">Submit</button>
+      </div>
+
+      <div id="formMessage" class="form-message" aria-live="polite"></div>
+    </form>
+  </main>
+
+  <!-- Templates -->
+  <template id="dependentTemplate">
+    <div class="card entry dependent-entry">
+      <div class="entry-header">
+        <strong>Dependent</strong>
+        <button type="button" class="btn btn-link remove-entry">Remove</button>
+      </div>
+      <div class="row">
+        <label>First name <input type="text" name="dependent_first[]" /></label>
+        <label>Last name <input type="text" name="dependent_last[]" /></label>
+      </div>
+      <div class="row">
+        <label>Suffix <input type="text" name="dependent_suffix[]" /></label>
+        <label>Date of birth <input type="date" name="dependent_dob[]" /></label>
+      </div>
+      <div class="row">
+        <label>
+          Relationship
+          <select name="dependent_relationship[]">
+            <option value="">Select Relationship Type</option>
+            <option>Spouse</option>
+            <option>Child</option>
+            <option>Domestic Partner</option>
+            <option>Other</option>
+          </select>
+        </label>
+      </div>
+    </div>
+  </template>
+
+  <template id="physicianTemplate">
+    <div class="card entry physician-entry">
+      <div class="entry-header">
+        <strong>Physician</strong>
+        <button type="button" class="btn btn-link remove-entry">Remove</button>
+      </div>
+      <div class="row">
+        <label>First name <input type="text" name="physician_first[]" /></label>
+        <label>Last name <input type="text" name="physician_last[]" /></label>
+      </div>
+      <div class="row">
+        <label>Practice name <input type="text" name="physician_practice[]" /></label>
+        <label>
+          Title
+          <select name="physician_title[]">
+            <option value="">Select Title</option>
+            <option>MD</option>
+            <option>DO</option>
+            <option>PA</option>
+            <option>NP</option>
+            <option>Other</option>
+          </select>
+        </label>
+      </div>
+      <div class="row">
+        <label>Phone <input type="tel" name="physician_phone[]" /></label>
+        <label>
+          Specialty
+          <select name="physician_specialty[]">
+            <option value="">Select Specialty</option>
+            <option>Primary Care</option>
+            <option>Cardiology</option>
+            <option>Orthopedics</option>
+            <option>Psychiatry</option>
+            <option>Other</option>
+          </select>
+        </label>
+      </div>
+      <div class="row">
+        <label>Address <input type="text" name="physician_address[]" /></label>
+        <label>City <input type="text" name="physician_city[]" /></label>
+      </div>
+      <div class="row">
+        <label>State <input type="text" name="physician_state[]" maxlength="2" /></label>
+        <label>Zip code <input type="text" name="physician_zip[]" maxlength="10" /></label>
+      </div>
+      <div class="row">
+        <label>
+          Are you a current patient?
+          <select name="physician_patient[]">
+            <option value="">Select</option>
+            <option>Yes</option>
+            <option>No</option>
+          </select>
+        </label>
+        <label class="small-yesno">
+          Do you have an appointment scheduled?
+          <div class="yesno">
+            <label><input type="radio" name="physician_appointment___ID__[]" value="Yes"> Yes</label>
+            <label><input type="radio" name="physician_appointment___ID__[]" value="No"> No</label>
+          </div>
+        </label>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const addDependentBtn = document.getElementById("addDependentBtn");
+      const dependentsContainer = document.getElementById("dependentsContainer");
+      const dependentTemplate = document.getElementById("dependentTemplate");
+
+      const addPhysicianBtn = document.getElementById("addPhysicianBtn");
+      const physiciansContainer = document.getElementById("physiciansContainer");
+      const physicianTemplate = document.getElementById("physicianTemplate");
+
+      const providerForm = document.getElementById("providerForm");
+      const submitBtn = document.getElementById("submitBtn");
+      const formMessage = document.getElementById("formMessage");
+
+      let physicianCounter = 0;
+
+      function addDependent(prefill = {}) {
+        const clone = dependentTemplate.content.cloneNode(true);
+        const entry = clone.querySelector(".dependent-entry");
+
+        // Prefill
+        if (prefill.first) entry.querySelector('input[name="dependent_first[]"]').value = prefill.first;
+        if (prefill.last) entry.querySelector('input[name="dependent_last[]"]').value = prefill.last;
+        if (prefill.suffix) entry.querySelector('input[name="dependent_suffix[]"]').value = prefill.suffix;
+        if (prefill.dob) entry.querySelector('input[name="dependent_dob[]"]').value = prefill.dob;
+        if (prefill.relationship) entry.querySelector('select[name="dependent_relationship[]"]').value = prefill.relationship;
+
+        setupRemoveButton(entry);
+        dependentsContainer.appendChild(entry);
+        entry.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+
+      function addPhysician(prefill = {}) {
+        const clone = physicianTemplate.content.cloneNode(true);
+        const entry = clone.firstElementChild;
+        const uniqueId = ++physicianCounter;
+
+        // Replace __ID__ in radio button names
+        entry.querySelectorAll('[name*="physician_appointment___ID__"]').forEach(el => {
+          el.name = el.name.replace('__ID__', uniqueId);
+        });
+
+        // Prefill values
+        if (prefill.first) entry.querySelector('input[name="physician_first[]"]').value = prefill.first;
+        if (prefill.last) entry.querySelector('input[name="physician_last[]"]').value = prefill.last;
+        if (prefill.practice) entry.querySelector('input[name="physician_practice[]"]').value = prefill.practice;
+        if (prefill.title) entry.querySelector('select[name="physician_title[]"]').value = prefill.title;
+        if (prefill.phone) entry.querySelector('input[name="physician_phone[]"]').value = prefill.phone;
+        if (prefill.specialty) entry.querySelector('select[name="physician_specialty[]"]').value = prefill.specialty;
+        if (prefill.address) entry.querySelector('input[name="physician_address[]"]').value = prefill.address;
+        if (prefill.city) entry.querySelector('input[name="physician_city[]"]').value = prefill.city;
+        if (prefill.state) entry.querySelector('input[name="physician_state[]"]').value = prefill.state;
+        if (prefill.zip) entry.querySelector('input[name="physician_zip[]"]').value = prefill.zip;
+        if (prefill.patient) entry.querySelector('select[name="physician_patient[]"]').value = prefill.patient;
+        if (prefill.appointment) {
+          const radio = entry.querySelector(`input[name="physician_appointment_${uniqueId}[]"][value="${prefill.appointment}"]`);
+          if (radio) radio.checked = true;
+        }
+
+        setupRemoveButton(entry);
+        physiciansContainer.appendChild(entry);
+        entry.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+
+      function setupRemoveButton(entry) {
+        const removeBtn = entry.querySelector(".remove-entry");
+        if (removeBtn) {
+          removeBtn.addEventListener("click", () => entry.remove());
+        }
+      }
+
+      // Event Listeners
+      addDependentBtn.addEventListener("click", () => addDependent());
+      addPhysicianBtn.addEventListener("click", () => addPhysician());
+
+      // Form Submission via Web3Forms
+      providerForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        // Reset message
+        formMessage.textContent = "";
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Sending...";
+
+        // Trigger native validation
+        if (!providerForm.checkValidity()) {
+          providerForm.reportValidity();
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Submit";
+          return;
+        }
+
+        const formData = new FormData(providerForm);
+
+        try {
+          const response = await fetch("https://api.web3forms.com/submit", {
+            method: "POST",
+            body: formData
+          });
+
+          const result = await response.json();
+
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Submit";
+
+          if (result.success) {
+            providerForm.reset();
+            dependentsContainer.innerHTML = "";
+            physiciansContainer.innerHTML = "";
+            physicianCounter = 0;
+            formMessage.style.color = "green";
+            formMessage.textContent = "Thank you — your form has been sent successfully.";
+          } else {
+            formMessage.style.color = "crimson";
+            formMessage.textContent = result.message || "There was a problem. Please try again.";
+          }
+        } catch (err) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Submit";
+          formMessage.style.color = "crimson";
+          formMessage.textContent = "Network error. Check your connection.";
+          console.error("Submission error:", err);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
