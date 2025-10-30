@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Provider Assistance Form</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>Provider Assistance Form</h1>
+      <p class="subtitle">Please fill out the form below. Use "Add Dependent" / "Add Physician" to add entries.</p>
+    </header>
+
+    <!-- SINGLE FORM WITH ID -->
+    <form id="providerForm" action="https://api.web3forms.com/submit" method="POST" novalidate>
+      <input type="hidden" name="access_key" value="d4a48e85-94e6-451d-ad62-e9eeea663818">
+
+      <!-- Employee Information -->
+      <fieldset class="section">
+        <legend>Employee Information</legend>
+        <div class="row">
+          <label>
+            First name
+            <input type="text" name="employee_first" required />
+          </label>
+          <label>
+            Last name
+            <input type="text" name="employee_last" required />
+          </label>
+        </div>
+
+        <div class="row">
+          <label>
+            Date of birth
+            <input type="date" name="employee_dob" />
+          </label>
+          <label>
+            Phone
+            <input type="tel" name="employee_phone" />
+          </label>
+        </div>
+
+        <div class="row">
+          <label>
+            Email
+            <input type="email" name="employee_email" />
+          </label>
+          <label>
+            Best contact method
+            <select name="employee_contact_method">
+              <option value="">Select</option>
+              <option>Email</option>
+              <option>Phone</option>
+              <option>Text</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="row">
+          <label>
+            Last 4 digits of SSN
+            <input type="text" name="employee_ssn4" maxlength="4" pattern="\d{4}" title="Please enter exactly 4 digits" />
+          </label>
+        </div>
+      </fieldset>
+
+      <!-- Family Members (Dependents) -->
+      <fieldset class="section" id="dependentsSection">
+        <legend>Family Members</legend>
+        <div id="dependentsContainer"></div>
+        <div class="actions-row">
+          <button type="button" id="addDependentBtn" class="btn btn-outline">Add Dependent</button>
+        </div>
+      </fieldset>
+
+      <!-- Physicians -->
+      <fieldset class="section" id="physiciansSection">
+        <legend>Physician Information</legend>
+        <div id="physiciansContainer"></div>
+        <div class="actions-row">
+          <button type="button" id="addPhysicianBtn" class="btn btn-outline">Add Physician</button>
+        </div>
+      </fieldset>
+
+      <!-- 3rd Party / Submit -->
+      <fieldset class="section small">
+        <label class="checkbox">
+          <input type="checkbox" name="third_party" value="yes" />
+          Check here if you're completing this form for someone other than yourself or your family member.
+        </label>
+      </fieldset>
+
+      <div class="submit-row">
+        <button type="submit" id="submitBtn" class="btn btn-primary">Submit</button>
+      </div>
+
+      <div id="formMessage" class="form-message" aria-live="polite"></div>
+    </form>
+  </main>
+
+  <!-- Templates -->
+  <template id="dependentTemplate">
+    <div class="card entry dependent-entry">
+      <div class="entry-header">
+        <strong>Dependent</strong>
+        <button type="button" class="btn btn-link remove-entry">Remove</button>
+      </div>
+      <div class="row">
+        <label>First name <input type="text" name="dependent_first[]" /></label>
+        <label>Last name <input type="text" name="dependent_last[]" /></label>
+      </div>
+      <div class="row">
+        <label>Suffix <input type="text" name="dependent_suffix[]" /></label>
+        <label>Date of birth <input type="date" name="dependent_dob[]" /></label>
+      </div>
+      <div class="row">
+        <label>
+          Relationship
+          <select name="dependent_relationship[]">
+            <option value="">Select Relationship Type</option>
+            <option>Spouse</option>
+            <option>Child</option>
+            <option>Domestic Partner</option>
+            <option>Other</option>
+          </select>
+        </label>
+      </div>
+    </div>
+  </template>
+
+  <template id="physicianTemplate">
+    <div class="card entry physician-entry">
+      <div class="entry-header">
+        <strong>Physician</strong>
+        <button type="button" class="btn btn-link remove-entry">Remove</button>
+      </div>
+      <div class="row">
+        <label>First name <input type="text" name="physician_first[]" /></label>
+        <label>Last name <input type="text" name="physician_last[]" /></label>
+      </div>
+      <div class="row">
+        <label>Practice name <input type="text" name="physician_practice[]" /></label>
+        <label>
+          Title
+          <select name="physician_title[]">
+            <option value="">Select Title</option>
+            <option>MD</option>
+            <option>DO</option>
+            <option>PA</option>
+            <option>NP</option>
+            <option>Other</option>
+          </select>
+        </label>
+      </div>
+      <div class="row">
+        <label>Phone <input type="tel" name="physician_phone[]" /></label>
+        <label>
+          Specialty
+          <select name="physician_specialty[]">
+            <option value="">Select Specialty</option>
+            <option>Primary Care</option>
+            <option>Cardiology</option>
+            <option>Orthopedics</option>
+            <option>Psychiatry</option>
+            <option>Other</option>
+          </select>
+        </label>
+      </div>
+      <div class="row">
+        <label>Address <input type="text" name="physician_address[]" /></label>
+        <label>City <input type="text" name="physician_city[]" /></label>
+      </div>
+      <div class="row">
+        <label>State <input type="text" name="physician_state[]" maxlength="2" /></label>
+        <label>Zip code <input type="text" name="physician_zip[]" maxlength="10" /></label>
+      </div>
+      <div class="row">
+        <label>
+          Are you a current patient?
+          <select name="physician_patient[]">
+            <option value="">Select</option>
+            <option>Yes</option>
+            <option>No</option>
+          </select>
+        </label>
+        <label class="small-yesno">
+          Do you have an appointment scheduled?
+          <div class="yesno">
+            <label><input type="radio" name="physician_appointment___ID__[]" value="Yes"> Yes</label>
+            <label><input type="radio" name="physician_appointment___ID__[]" value="No"> No</label>
+          </div>
+        </label>
+      </div>
+    </div>
+  </template>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
